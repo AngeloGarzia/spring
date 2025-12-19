@@ -2,11 +2,18 @@ package fr.diginamic.hello.controleurs;
 
 import fr.diginamic.hello.exceptions.VilleApiException;
 import jakarta.annotation.PostConstruct;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.Binding;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/villes")
@@ -32,7 +39,15 @@ public class VilleControleur {
 
     @PostMapping()
 
-    public ResponseEntity<String> ajouterVille(@RequestBody Ville nouvelleVille) throws VilleApiException {
+    public ResponseEntity<String> ajouterVille(@Valid @RequestBody Ville nouvelleVille, BindingResult bindinResultat) throws VilleApiException {
+
+        if (bindinResultat.hasErrors()) {
+           List<FieldError> erreurs = bindinResultat.getFieldErrors();
+            String message =erreurs.stream().map(fe->fe.getDefaultMessage())
+                            .collect(Collectors.joining(", "));
+            throw new VilleApiException(message);
+        }
+
         for (Ville v : villes) {
             if (v.getNom().equals(nouvelleVille.getNom())) {
                 throw new VilleApiException("La ville existe déjà");
@@ -52,7 +67,7 @@ public class VilleControleur {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getVilleById(@PathVariable int id) throws VilleApiException {
+    public ResponseEntity<?> getVilleById(@Valid @PathVariable int id) throws VilleApiException {
         for (Ville v : villes) {
             if (v.getId() == id) {
                 return ResponseEntity.ok(v);
@@ -88,8 +103,19 @@ public class VilleControleur {
         return ResponseEntity.ok(resultat);
     }
 
+
     @PutMapping("/{id}")
-    public ResponseEntity<?> modifierVille(@PathVariable int id, @RequestBody Ville villeModifiee) throws VilleApiException {
+    public ResponseEntity<?> modifierVille(@PathVariable int id, @Valid @RequestBody Ville villeModifiee, BindingResult bindinResultat) throws VilleApiException {
+
+        if (bindinResultat.hasErrors()) {
+            List<FieldError> erreurs = bindinResultat.getFieldErrors();
+            String message =erreurs.stream().map(fe->fe.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+            throw new VilleApiException(message);
+        }
+
+
+
         for (Ville v : villes) {
             if (v.getId() == id) {
                 v.setNom(villeModifiee.getNom());

@@ -1,11 +1,20 @@
 package fr.diginamic.hello.controleurs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Ville {
+
+    @NotNull(message = "Le nom de la ville est obligatoire")
+    @Size(min = 2, message = "Le nom de la ville doit contenir au moins 2 caractères")
     private String nom;
+
+    @Min(value = 2, message = "Le nombre d'habitants doit être supérieur ou égal à 1")
     private int population;
+
     private int id;
 
     public Ville() {
