@@ -1,4 +1,4 @@
-package fr.diginamic.hello.exceptions;
+package fr.diginamic.recencement.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -1,12 +1,12 @@
-package fr.diginamic.hello.services;
+package fr.diginamic.recencement.services;
 
 
-import fr.diginamic.hello.controleurs.Departement;
-import fr.diginamic.hello.controleurs.Ville;
-import fr.diginamic.hello.dto.DepartementDto;
-import fr.diginamic.hello.dto.VilleDto;
-import fr.diginamic.hello.mappers.DepartementMapper;
-import fr.diginamic.hello.mappers.VilleMapper;
+import fr.diginamic.recencement.controleurs.Departement;
+import fr.diginamic.recencement.controleurs.Ville;
+import fr.diginamic.recencement.dto.DepartementDto;
+import fr.diginamic.recencement.dto.VilleDto;
+import fr.diginamic.recencement.mappers.DepartementMapper;
+import fr.diginamic.recencement.mappers.VilleMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 

@@ -1,6 +1,6 @@
-package fr.diginamic.hello.services;
+package fr.diginamic.recencement.services;
 
-import fr.diginamic.hello.controleurs.Departement;
+import fr.diginamic.recencement.controleurs.Departement;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;

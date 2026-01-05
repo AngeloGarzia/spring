@@ -1,9 +1,8 @@
-package fr.diginamic.hello.controleurs;
+package fr.diginamic.recencement.controleurs;
 
-import fr.diginamic.hello.dto.VilleDto;
-import fr.diginamic.hello.exceptions.VilleApiException;
-import fr.diginamic.hello.mappers.VilleMapper;
-import fr.diginamic.hello.services.VilleService;
+import fr.diginamic.recencement.dto.VilleDto;
+import fr.diginamic.recencement.mappers.VilleMapper;
+import fr.diginamic.recencement.services.VilleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

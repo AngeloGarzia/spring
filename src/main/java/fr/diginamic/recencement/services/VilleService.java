@@ -1,13 +1,12 @@
-package fr.diginamic.hello.services;
+package fr.diginamic.recencement.services;
 
-import fr.diginamic.hello.controleurs.Departement;
-import fr.diginamic.hello.controleurs.Ville;
-import fr.diginamic.hello.dto.VilleDto;
-import fr.diginamic.hello.exceptions.VilleApiException;
-import fr.diginamic.hello.interfaces.DepartementRepository;
-import fr.diginamic.hello.interfaces.VilleRepository;
-import fr.diginamic.hello.mappers.VilleMapper;
-import jakarta.annotation.PostConstruct;
+import fr.diginamic.recencement.controleurs.Departement;
+import fr.diginamic.recencement.controleurs.Ville;
+import fr.diginamic.recencement.dto.VilleDto;
+import fr.diginamic.recencement.exceptions.VilleApiException;
+import fr.diginamic.recencement.interfaces.DepartementRepository;
+import fr.diginamic.recencement.interfaces.VilleRepository;
+import fr.diginamic.recencement.mappers.VilleMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 

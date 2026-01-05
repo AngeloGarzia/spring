@@ -1,6 +1,6 @@
-package fr.diginamic.hello.interfaces;
+package fr.diginamic.recencement.interfaces;
 
-import fr.diginamic.hello.controleurs.Ville;
+import fr.diginamic.recencement.controleurs.Ville;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
