@@ -1,9 +1,165 @@
 package fr.diginamic.hello.services;
 
+import fr.diginamic.hello.controleurs.Departement;
+import fr.diginamic.hello.controleurs.Ville;
+import fr.diginamic.hello.dto.VilleDto;
+import fr.diginamic.hello.exceptions.VilleApiException;
+import fr.diginamic.hello.interfaces.DepartementRepository;
+import fr.diginamic.hello.interfaces.VilleRepository;
+import fr.diginamic.hello.mappers.VilleMapper;
+import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Service métier gérant les opérations sur les villes.
+ * <p>
+ * Cette implémentation utilise une liste en mémoire pour stocker les villes.
+ * Plus tard, elle pourra être remplacée par une implémentation basée sur JPA / base de données.
+ */
+@Service
+@Transactional
 public class VilleService {
 
-    @Service
+    private final VilleRepository villeRepository;
+    private final DepartementRepository departementRepository;
+    private final VilleMapper mapper;
 
+    public VilleService(VilleRepository villeRepository,
+                        DepartementRepository departementRepository,
+                        VilleMapper mapper) {
+        this.villeRepository = villeRepository;
+        this.departementRepository = departementRepository;
+        this.mapper = mapper;
+    }
+
+    @Transactional
+    public List<VilleDto> extractVilles() {
+        return mapper.toDtos(villeRepository.findAll());
+    }
+
+    @Transactional
+    public VilleDto extractVille(int idVille) {
+        Ville ville = villeRepository.findById(idVille)
+                .orElseThrow(() -> new VilleApiException("La ville n'a pas été trouvée"));
+        return mapper.toDto(ville);
+    }
+
+    @Transactional
+    public VilleDto extractVille(String nom) {
+        List<Ville> resultats = villeRepository.findByNomStartingWith(nom);
+        if (resultats.isEmpty()) {
+            throw new VilleApiException("Aucune ville avec ce nom");
+        }
+        return mapper.toDto(resultats.get(0));
+    }
+
+    @Transactional
+    public VilleDto insertVille(VilleDto villeDto) {
+
+        List<String> erreurs = new ArrayList<>();
+
+        // population > 10
+        if (villeDto.getPopulation() <= 10) {
+            erreurs.add("La population doit être supérieure à 10");
+        }
+
+        // nom >= 2 caractères
+        if (villeDto.getNom() == null || villeDto.getNom().length() < 2) {
+            erreurs.add("Le nom de la ville doit contenir au moins 2 caractères");
+        }
+        if (villeDto.getNom().length()>20) {
+            erreurs.add("Le nom de la ville contenir au maximum 20 caractères");
+        }
+
+        // ✅ ANTI-DUPLICATA
+        List<Ville> existantesMemeNom = villeRepository.findByNomStartingWith(villeDto.getNom());
+        Departement deptCible = findOrCreateDepartement(villeDto);
+        for (Ville v : existantesMemeNom) {
+            if (v.getNom().equalsIgnoreCase(villeDto.getNom())
+                    && v.getDepartement() != null
+                    && v.getDepartement().getId().equals(deptCible.getId())) {
+                erreurs.add("Une ville avec ce nom existe déjà dans ce département");
+                break;
+            }
+        }
+
+        if (!erreurs.isEmpty()) {
+            throw new VilleApiException(String.join(" | ", erreurs));
+        }
+
+        // TP09 Étape 3 : Trouve/crée département
+        Ville ville = mapper.toEntity(villeDto);
+        ville.setDepartement(deptCible);
+
+        Ville savedVille = villeRepository.save(ville);
+        return mapper.toDto(savedVille);
+    }
+
+    private Departement findOrCreateDepartement(VilleDto dto) {
+        if (dto.getCodeDepartement() != null) {
+            return departementRepository.findByCode(dto.getCodeDepartement())
+                    .orElseGet(() -> {
+                        Departement newDept = new Departement();
+                        newDept.setCode(dto.getCodeDepartement());
+                        newDept.setNom("Département " + dto.getCodeDepartement());
+                        return departementRepository.save(newDept);
+                    });
+        }
+        if (dto.getIdDepartement() != null) {
+            return departementRepository.findById(dto.getIdDepartement())
+                    .orElseThrow(() -> new VilleApiException("Département inconnu"));
+        }
+        throw new VilleApiException("codeDepartement ou idDepartement obligatoire");
+    }
+
+    @Transactional
+    public VilleDto modifierVille(int idVille, VilleDto villeModifiee) {
+
+        List<String> erreurs = new ArrayList<>();
+
+        if (villeModifiee.getPopulation() <= 10) {
+            erreurs.add("La population doit être supérieure à 10");
+        }
+        if (villeModifiee.getNom() == null || villeModifiee.getNom().length() < 2) {
+            erreurs.add("Le nom de la ville doit contenir au moins 2 caractères");
+        }
+
+        if (!erreurs.isEmpty()) {
+            throw new VilleApiException(String.join(" | ", erreurs));
+        }
+
+        Ville existante = villeRepository.findById(idVille)
+                .orElseThrow(() -> new VilleApiException("La ville n'a pas été trouvée"));
+
+        existante.setNom(villeModifiee.getNom());
+        existante.setPopulation(villeModifiee.getPopulation());
+
+        // TP09 : Gère département si changé
+        if (villeModifiee.getCodeDepartement() != null || villeModifiee.getIdDepartement() != null) {
+            existante.setDepartement(findOrCreateDepartement(villeModifiee));
+        }
+
+        Ville savedVille = villeRepository.save(existante);
+        return mapper.toDto(savedVille);
+    }
+
+    @Transactional
+    public List<VilleDto> extractVillesParPopulation(int min, int max) {
+        if (min > max) {
+            throw new VilleApiException("La borne minimale doit être inférieure ou égale à la borne maximale");
+        }
+        return mapper.toDtos(villeRepository.findByPopulationBetween(min, max));
+    }
+
+    @Transactional
+    public List<VilleDto> supprimerVille(int idVille) {
+        Ville existante = villeRepository.findById(idVille)
+                .orElseThrow(() -> new VilleApiException("La ville n'a pas été trouvée"));
+        villeRepository.deleteById(idVille);
+        return mapper.toDtos(villeRepository.findAll());
+    }
 }

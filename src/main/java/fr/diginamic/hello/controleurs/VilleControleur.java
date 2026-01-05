@@ -1,142 +1,121 @@
 package fr.diginamic.hello.controleurs;
 
+import fr.diginamic.hello.dto.VilleDto;
 import fr.diginamic.hello.exceptions.VilleApiException;
-import jakarta.annotation.PostConstruct;
+import fr.diginamic.hello.mappers.VilleMapper;
+import fr.diginamic.hello.services.VilleService;
 import jakarta.validation.Valid;
-import jakarta.validation.Validator;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.Binding;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Contrôleur REST exposant des endpoints pour gérer les villes.
+ * Cette classe reçoit les requêtes HTTP, délègue le traitement au {@link VilleService}
+ * et renvoie les réponses au client (JSON + codes HTTP).
+ */
 @RestController
 @RequestMapping("/villes")
 public class VilleControleur {
 
+    private final VilleService villeService;
+    private final VilleMapper mapper;
 
-    private static int cptId = 1;
-    private final List<Ville> villes = new ArrayList<>();
-
-    @PostConstruct
-    public void initVilles() {
-        villes.add(new Ville("Paris", 200000, 1));
-        villes.add(new Ville("Lyon", 500000, 2));
-        villes.add(new Ville("Marseille", 800000, 3));
-        villes.add(new Ville("Toulouse", 400000, 4));
-        cptId = 5;
+    public VilleControleur(VilleService villeService, VilleMapper mapper) {
+        this.villeService = villeService;
+        this.mapper=mapper;
     }
 
+    /**
+     * GET permettant de récupérer la liste de toutes les villes.
+     * URL : GET /villes
+     */
     @GetMapping
-    public List<Ville> getVilles() {
-        return villes;
+    public ResponseEntity<List<VilleDto>> getVilles() {
+        // TP : List<VilleDto> extractVilles()
+        return ResponseEntity.ok(villeService.extractVilles());
     }
 
-    @PostMapping()
-
-    public ResponseEntity<String> ajouterVille(@Valid @RequestBody Ville nouvelleVille, BindingResult bindinResultat) throws VilleApiException {
-
-        if (bindinResultat.hasErrors()) {
-           List<FieldError> erreurs = bindinResultat.getFieldErrors();
-            String message =erreurs.stream().map(fe->fe.getDefaultMessage())
-                            .collect(Collectors.joining(", "));
-            throw new VilleApiException(message);
+    /**
+     * POST : insère une nouvelle ville et retourne la ville créée.
+     * URL : POST /villes
+     */
+    @PostMapping
+    public ResponseEntity<VilleDto> ajouterVille(@Valid @RequestBody VilleDto nouvelleVille,
+                                                 BindingResult result) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().build();
         }
-
-        for (Ville v : villes) {
-            if (v.getNom().equals(nouvelleVille.getNom())) {
-                throw new VilleApiException("La ville existe déjà");
-            }
-        }
-        if (nouvelleVille.getPopulation()<=10) {
-            throw new VilleApiException("La Popualation doit être superieur a 10");
-
-        }
-        if (nouvelleVille.getNom().length()<2) {
-            throw new VilleApiException("La Ville doit contenir 2 carateres");
-
-        }
-        nouvelleVille.setId(cptId++);
-        villes.add(nouvelleVille);
-        return ResponseEntity.ok("Ville insérée avec succès");
+        // TP : VilleDto insertVille(VilleDto ville)
+        VilleDto saved = villeService.insertVille(nouvelleVille);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
+    /**
+     * GET : retourne une ville en fonction de son id.
+     * URL : GET /villes/{id}
+     */
     @GetMapping("/{id}")
-    public ResponseEntity<?> getVilleById(@Valid @PathVariable int id) throws VilleApiException {
-        for (Ville v : villes) {
-            if (v.getId() == id) {
-                return ResponseEntity.ok(v);
-            }
-        }
-        throw new VilleApiException("La ville n'a pas été trouvée");
-    }
-    @GetMapping("/nom/{prefixe}")
-    public ResponseEntity<?> getVilleByNom(@PathVariable String prefixe) throws VilleApiException {
-        List<Ville> resultat = villes.stream()
-                .filter(v -> v.getNom() != null &&
-                        v.getNom().toLowerCase().startsWith(prefixe.toLowerCase()))
-                .toList();
-
-        if (resultat.isEmpty()) {
-            throw new VilleApiException(
-                    "Aucune ville dont le nom commence par " + prefixe + " n'a pas été trouvée"
-            );
-        }
-            return ResponseEntity.ok(resultat);
-    }
-    @GetMapping("/pop/{min}/{max}")
-    public ResponseEntity<?> getVilleByPop(@PathVariable int min, @PathVariable int max) throws VilleApiException {
-        List<Ville> resultat = villes.stream()
-                .filter(v -> v.getPopulation() > min && v.getPopulation() < max)
-                .toList();
-
-        if (resultat.isEmpty()) {
-            throw new VilleApiException(
-                    "Aucune ville dont la population est comprise entre " + min + " et "+max
-            );
-        }
-        return ResponseEntity.ok(resultat);
+    public ResponseEntity<VilleDto> getVilleById(@PathVariable int id) {
+        // TP : VilleDto extractVille(int idVille)
+        return ResponseEntity.ok(villeService.extractVille(id));
     }
 
+    /**
+     * GET : retourne une ville en fonction de son nom.
+     * URL : GET /villes/nom/{nom}
+     */
+    @GetMapping("/nom/{nom}")
+    public ResponseEntity<VilleDto> getVilleByNom(@PathVariable String nom) {
+        return ResponseEntity.ok(villeService.extractVille(nom));
+    }
 
+    /**
+     * GET : retourne une ville en fonction d'une population entre min et max'.
+     * URL : GET /villes/population
+     */
+    @GetMapping("/population/{min}/{max}")
+    public ResponseEntity<?> getVillesParPopulation(
+            @PathVariable int min,
+            @PathVariable int max) {
+
+        List<VilleDto> villes = villeService.extractVillesParPopulation(min, max);
+
+        if (villes.isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Aucune ville trouvée pour cette plage de population");
+        }
+
+        return ResponseEntity.ok(villes);
+    }
+
+    /**
+     * PUT : modifie une ville et retourne la ville modifiée.
+     * URL : PUT /villes/{id}
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<?> modifierVille(@PathVariable int id, @Valid @RequestBody Ville villeModifiee, BindingResult bindinResultat) throws VilleApiException {
-
-        if (bindinResultat.hasErrors()) {
-            List<FieldError> erreurs = bindinResultat.getFieldErrors();
-            String message =erreurs.stream().map(fe->fe.getDefaultMessage())
-                    .collect(Collectors.joining(", "));
-            throw new VilleApiException(message);
+    public ResponseEntity<VilleDto> modifierVille(@PathVariable int id,
+                                                  @Valid @RequestBody VilleDto villeModifiee,
+                                                  BindingResult result) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().build();
         }
-
-
-
-        for (Ville v : villes) {
-            if (v.getId() == id) {
-                v.setNom(villeModifiee.getNom());
-                v.setPopulation(villeModifiee.getPopulation());
-                return ResponseEntity.ok(v);
-            }
-        }
-        throw new VilleApiException("La ville n'a pas été trouvée");
+        // TP : VilleDto modifierVille(int idVille, VilleDto villeModifiee)
+        VilleDto updated = villeService.modifierVille(id, villeModifiee);
+        return ResponseEntity.ok(updated);
     }
 
+    /**
+     * DELETE : supprime une ville et retourne la liste après suppression.
+     * URL : DELETE /villes/{id}
+     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> supprimerVille(@PathVariable int id) throws VilleApiException {
-        for (Ville v : villes) {
-            if (v.getId() == id) {
-                villes.remove(v);
-                return ResponseEntity.ok("Ville supprimée avec succès");
-            }
-        }
-        throw new VilleApiException("La ville n'a pas été trouvée");
+    public ResponseEntity<List<VilleDto>> supprimerVille(@PathVariable int id) {
+        // TP : List<VilleDto> supprimerVille(int idVille)
+        return ResponseEntity.ok(villeService.supprimerVille(id));
     }
-
-
 }
-
