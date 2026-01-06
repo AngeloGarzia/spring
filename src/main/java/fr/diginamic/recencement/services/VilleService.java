@@ -74,15 +74,17 @@ public class VilleService {
             erreurs.add("Le nom de la ville contenir au maximum 20 caractères");
         }
 
-        // ✅ ANTI-DUPLICATA
-        List<Ville> existantesMemeNom = villeRepository.findByNomStartingWith(villeDto.getNom());
-        Departement deptCible = findOrCreateDepartement(villeDto);
+        //  On n'insert pas deux fois la meme ville dans le meme departement
+        List<Ville> existantesMemeNom = villeRepository.findByNomStartingWith(villeDto.getNom()); //Recheche le nom de la  ville venant du dto dans la base
+        Departement deptCible = findOrCreateDepartement(villeDto); //trouve ou creer un departement venant du dto
+
+        //recherche dans la liste de ville du meme departement(dto) si le nom de ville existe
         for (Ville v : existantesMemeNom) {
             if (v.getNom().equalsIgnoreCase(villeDto.getNom())
                     && v.getDepartement() != null
                     && v.getDepartement().getId().equals(deptCible.getId())) {
                 erreurs.add("Une ville avec ce nom existe déjà dans ce département");
-                break;
+                break; //si au moins une ville existe au sort!
             }
         }
 
@@ -90,7 +92,7 @@ public class VilleService {
             throw new VilleApiException(String.join(" | ", erreurs));
         }
 
-        // TP09 Étape 3 : Trouve/crée département
+        //  Trouve/crée département
         Ville ville = mapper.toEntity(villeDto);
         ville.setDepartement(deptCible);
 

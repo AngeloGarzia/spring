@@ -48,8 +48,18 @@ public class DepartementControleur {
         return ResponseEntity.ok(service.supprimer(id));
     }
 
+     @PutMapping("/{id}")
+    public ResponseEntity<DepartementDto> modifierDepartement(@PathVariable Integer id,
+                                                              @Valid @RequestBody DepartementDto dto,
+                                                              BindingResult result) {
+        if (result.hasErrors()) return ResponseEntity.badRequest().build();
+        return ResponseEntity.ok(service.modifier(id, dto));
+    }
+
+
     @GetMapping
-    public ResponseEntity<List<DepartementDto>> getDepartements() {
+    public ResponseEntity<List<DepartementDto>> getDepartements()
+    {
         return ResponseEntity.ok(service.lister());
     }
 

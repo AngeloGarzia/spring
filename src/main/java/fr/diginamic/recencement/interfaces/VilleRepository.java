@@ -11,12 +11,16 @@ import java.util.List;
 
 @Repository
 public interface VilleRepository extends JpaRepository<Ville, Integer> {
+    // Liste de Villes commencant par ..
     List<Ville> findByNomStartingWith(String nom);
-    List<Ville> findByPopulationBetween(int min, int max);
-    //  Top N villes (avec Pageable)
-    @Query("SELECT v FROM Ville v WHERE v.departement.id = :idDept ORDER BY v.population DESC")
-    List<Ville> findTopNByDepartement(@Param("idDept") Integer idDept, Pageable pageable);
 
-    // : Population + dept (nommage Spring)
+    //Liste de Villes avec une population entre min et max
+    List<Ville> findByPopulationBetween(int min, int max);
+
+    //  Top N villes
+    @Query("SELECT v FROM Ville v WHERE v.departement.id = :idDept ORDER BY v.population DESC")
+    List<Ville> findTopNByDepartement(@Param("idDept") Integer idDept, Pageable pageable); //milite de resultat grace a pageable
+
+    // : Population + dept
     List<Ville> findByPopulationBetweenAndDepartementId(int min, int max, Integer idDept);
 }
