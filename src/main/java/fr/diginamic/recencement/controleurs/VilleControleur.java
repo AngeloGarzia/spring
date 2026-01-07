@@ -1,7 +1,6 @@
 package fr.diginamic.recencement.controleurs;
 
-import fr.diginamic.recencement.dto.VilleDto;
-import fr.diginamic.recencement.mappers.VilleMapper;
+import fr.diginamic.recencement.Dto.VilleDto;
 import fr.diginamic.recencement.services.VilleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,24 +17,24 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/villes")
-public class VilleControleur {
+public class VilleControleur implements IVilleControleur {
 
     private final VilleService villeService;
-    private final VilleMapper mapper;
 
-    public VilleControleur(VilleService villeService, VilleMapper mapper) {
+    public VilleControleur(VilleService villeService) {
         this.villeService = villeService;
-        this.mapper=mapper;
     }
 
     /**
-     * GET permettant de récupérer la liste de toutes les villes.
-     * URL : GET /villes
+     * GET permettant de récupérer la liste de toutes les villes (paginée).
+     * URL : GET /villes?page=0&size=20
      */
     @GetMapping
-    public ResponseEntity<List<VilleDto>> getVilles() {
-        // TP : List<VilleDto> extractVilles()
-        return ResponseEntity.ok(villeService.extractVilles());
+    @Override
+    public ResponseEntity<?> getVilles(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(villeService.extractVillesPage(page, size));
     }
 
     /**
@@ -43,12 +42,12 @@ public class VilleControleur {
      * URL : POST /villes
      */
     @PostMapping
+    @Override
     public ResponseEntity<VilleDto> ajouterVille(@Valid @RequestBody VilleDto nouvelleVille,
                                                  BindingResult result) {
         if (result.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
-        // TP : VilleDto insertVille(VilleDto ville)
         VilleDto saved = villeService.insertVille(nouvelleVille);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
@@ -58,25 +57,31 @@ public class VilleControleur {
      * URL : GET /villes/{id}
      */
     @GetMapping("/{id}")
+    @Override
     public ResponseEntity<VilleDto> getVilleById(@PathVariable int id) {
-        // TP : VilleDto extractVille(int idVille)
         return ResponseEntity.ok(villeService.extractVille(id));
     }
 
     /**
-     * GET : retourne une ville en fonction de son nom.
-     * URL : GET /villes/nom/{nom}
+     * GET : villes commençant par {nom}
      */
-    @GetMapping("/nom/{nom}")
-    public ResponseEntity<VilleDto> getVilleByNom(@PathVariable String nom) {
-        return ResponseEntity.ok(villeService.extractVille(nom));
-    }
+    @GetMapping("/nom/{prefixe}")
+    @Override
+    public ResponseEntity<?> getVillesParNomPrefixe(@PathVariable String prefixe) {
+        List<VilleDto> villes = villeService.extractVillesParNomPrefixe(prefixe);
 
+        if (villes.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Aucune ville commençant par '" + prefixe + "' n'existe");
+        }
+        return ResponseEntity.ok(villes);
+    }
     /**
-     * GET : retourne une ville en fonction d'une population entre min et max'.
-     * URL : GET /villes/population
+     * GET : retourne les villes avec population entre min et max.
+     * URL : GET /villes/population/{min}/{max}
      */
     @GetMapping("/population/{min}/{max}")
+    @Override
     public ResponseEntity<?> getVillesParPopulation(
             @PathVariable int min,
             @PathVariable int max) {
@@ -97,13 +102,14 @@ public class VilleControleur {
      * URL : PUT /villes/{id}
      */
     @PutMapping("/{id}")
-    public ResponseEntity<VilleDto> modifierVille(@PathVariable int id,
-                                                  @Valid @RequestBody VilleDto villeModifiee,
-                                                  BindingResult result) {
+    @Override
+    public ResponseEntity<VilleDto> modifierVille(
+            @PathVariable int id,
+            @Valid @RequestBody VilleDto villeModifiee,
+            BindingResult result) {
         if (result.hasErrors()) {
             return ResponseEntity.badRequest().build();
         }
-        // TP : VilleDto modifierVille(int idVille, VilleDto villeModifiee)
         VilleDto updated = villeService.modifierVille(id, villeModifiee);
         return ResponseEntity.ok(updated);
     }
@@ -113,8 +119,9 @@ public class VilleControleur {
      * URL : DELETE /villes/{id}
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<List<VilleDto>> supprimerVille(@PathVariable int id) {
-        // TP : List<VilleDto> supprimerVille(int idVille)
+    @Override
+    public ResponseEntity<List<VilleDto>> supprimerVille(
+            @PathVariable int id) {
         return ResponseEntity.ok(villeService.supprimerVille(id));
     }
 }

@@ -1,13 +1,15 @@
 package fr.diginamic.recencement.services;
 
-import fr.diginamic.recencement.controleurs.Departement;
-import fr.diginamic.recencement.controleurs.Ville;
-import fr.diginamic.recencement.dto.VilleDto;
+import fr.diginamic.recencement.Entites.Departement;
+import fr.diginamic.recencement.Entites.Ville;
+import fr.diginamic.recencement.Dto.VilleDto;
 import fr.diginamic.recencement.exceptions.VilleApiException;
 import fr.diginamic.recencement.interfaces.DepartementRepository;
 import fr.diginamic.recencement.interfaces.VilleRepository;
 import fr.diginamic.recencement.mappers.VilleMapper;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -45,6 +47,12 @@ public class VilleService {
         Ville ville = villeRepository.findById(idVille)
                 .orElseThrow(() -> new VilleApiException("La ville n'a pas été trouvée"));
         return mapper.toDto(ville);
+    }
+
+
+    @Transactional
+    public List<VilleDto> extractVillesParNomPrefixe(String prefixe) {
+        return mapper.toDtos(villeRepository.findByNomStartingWithIgnoreCase(prefixe));
     }
 
     @Transactional
@@ -114,7 +122,7 @@ public class VilleService {
             return departementRepository.findById(dto.getIdDepartement())
                     .orElseThrow(() -> new VilleApiException("Département inconnu"));
         }
-        throw new VilleApiException("codeDepartement ou idDepartement obligatoire");
+        throw new VilleApiException("code Departement ou id Departement obligatoire");
     }
 
     @Transactional
@@ -139,7 +147,7 @@ public class VilleService {
         existante.setNom(villeModifiee.getNom());
         existante.setPopulation(villeModifiee.getPopulation());
 
-        // TP09 : Gère département si changé
+        //  Gère département si changé
         if (villeModifiee.getCodeDepartement() != null || villeModifiee.getIdDepartement() != null) {
             existante.setDepartement(findOrCreateDepartement(villeModifiee));
         }
@@ -153,7 +161,7 @@ public class VilleService {
         if (min > max) {
             throw new VilleApiException("La borne minimale doit être inférieure ou égale à la borne maximale");
         }
-        return mapper.toDtos(villeRepository.findByPopulationBetween(min, max));
+        return mapper.toDtos(villeRepository.findByPopulationBetweenOrderByPopulationDesc(min, max));
     }
 
     @Transactional
@@ -163,4 +171,29 @@ public class VilleService {
         villeRepository.deleteById(idVille);
         return mapper.toDtos(villeRepository.findAll());
     }
+    @Transactional
+    public List<VilleDto> extractVillesParPopulationEtDepartement(int idDept, int min, int max) {
+        if (min > max) {
+            throw new VilleApiException("La borne minimale doit être inférieure ou égale à la borne maximale");
+        }
+        return mapper.toDtos(
+                villeRepository.findByPopulationBetweenAndDepartementIdOrderByPopulationDesc(min, max, idDept)
+        );
+    }
+    @Transactional
+    public List<VilleDto> extractTopNVillesParDepartement(int idDept, int n) {
+        if (n <= 0) {
+            throw new VilleApiException("Le nombre de villes doit être strictement positif");
+        }
+        return mapper.toDtos(
+                villeRepository.findTopNByDepartement(idDept, PageRequest.of(0, n))
+        );
+    }
+    @Transactional
+    public Page<VilleDto> extractVillesPage(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        return villeRepository.findAll(pageable)
+                .map(mapper::toDto);
+    }
+
 }

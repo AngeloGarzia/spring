@@ -1,4 +1,4 @@
-package fr.diginamic.recencement.dto;
+package fr.diginamic.recencement.Dto;
 
 
     public class DepartementDto {

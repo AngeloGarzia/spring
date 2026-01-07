@@ -1,7 +1,7 @@
 package fr.diginamic.recencement.mappers;
 
-import fr.diginamic.recencement.controleurs.Ville;
-import fr.diginamic.recencement.dto.VilleDto;
+import fr.diginamic.recencement.Entites.Ville;
+import fr.diginamic.recencement.Dto.VilleDto;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

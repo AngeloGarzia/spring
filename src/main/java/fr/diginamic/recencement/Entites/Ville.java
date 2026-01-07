@@ -1,4 +1,4 @@
-package fr.diginamic.recencement.controleurs;
+package fr.diginamic.recencement.Entites;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;

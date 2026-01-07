@@ -1,7 +1,7 @@
 package fr.diginamic.recencement.mappers;
 
-import fr.diginamic.recencement.controleurs.Departement;
-import fr.diginamic.recencement.dto.DepartementDto;
+import fr.diginamic.recencement.Entites.Departement;
+import fr.diginamic.recencement.Dto.DepartementDto;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
