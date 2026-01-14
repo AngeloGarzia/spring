@@ -1,9 +1,15 @@
 package fr.diginamic.recencement.controleurs;
-
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Chunk;
 import fr.diginamic.recencement.Dto.VilleDto;
 import fr.diginamic.recencement.services.VilleService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -124,4 +130,27 @@ public class VilleControleur implements IVilleControleur {
             @PathVariable int id) {
         return ResponseEntity.ok(villeService.supprimerVille(id));
     }
+    /**
+     * Trouve les villes de plus de N habitants et creer un csv
+     * URL :GET /csv/{min}
+     */
+    @GetMapping("/csv/{min}")
+    @Operation(summary = "Export CSV villes > population min")
+    public ResponseEntity<byte[]> exportCsvVilles(@PathVariable int min) {
+        List<VilleDto> villes = villeService.extractVillesParPopulationSup(min);
+
+        String csv = "nom de la ville,nombre d'habitants,code département,nom département\n";
+        for (VilleDto v : villes) {
+            csv += String.format("%s,%d,%s,%s\n",
+                    v.getNom(), v.getPopulation(),
+                    v.getCodeDepartement());
+        }
+
+        byte[] bytes = csv.getBytes();
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=villes_" + min + ".csv")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(bytes);
+    }
+
 }

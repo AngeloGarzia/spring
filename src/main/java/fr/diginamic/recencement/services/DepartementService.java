@@ -22,7 +22,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class DepartementService {
+public class DepartementService implements IDepartementService {
 
     private final DepartementRepository departementRepository;
     private final VilleRepository villeRepository;
@@ -54,6 +54,7 @@ public class DepartementService {
      * @return département créé sous forme de {@link DepartementDto}
      */
     @Transactional
+    @Override
     public DepartementDto creer(DepartementDto dto) {
         Departement dept = mapper.toEntity(dto);
         Departement saved = departementRepository.save(dept);
@@ -66,6 +67,7 @@ public class DepartementService {
      * @return liste de {@link DepartementDto}
      */
     @Transactional
+    @Override
     public List<DepartementDto> lister() {
         return mapper.toDtos(departementRepository.findAll());
     }
@@ -78,6 +80,7 @@ public class DepartementService {
      * @throws RuntimeException si aucun département n'est trouvé
      */
     @Transactional
+    @Override
     public DepartementDto getById(Integer id) {
         Departement dept = departementRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Département non trouvé"));
@@ -92,12 +95,21 @@ public class DepartementService {
      * @throws RuntimeException si aucun département n'est trouvé
      */
     @Transactional
+    @Override
     public DepartementDto getByCode(String code) {
         Departement dept = departementRepository.findByCode(code)
                 .orElseThrow(() -> new RuntimeException("Département non trouvé"));
         return mapper.toDto(dept);
     }
+    @Transactional
+    public List<VilleDto> getVillesByDepartement(String code) {
+        // Version 1 : Via VilleRepository direct
+        return villeMapper.toDtos(villeRepository.findByDepartementCodeOrderByPopulationDesc(code));
 
+        // Version 2 : Via tes méthodes existantes (si tu préfères)
+        // Integer id = departementRepository.findByCode(code).get().getId();
+        // return villeService.extractTopNVillesParDepartement(id, 100);
+    }
     /**
      * Supprime un département par son identifiant puis retourne la liste mise à jour des départements. [file:16]
      *
@@ -106,6 +118,7 @@ public class DepartementService {
      * @throws RuntimeException si le département n'existe pas
      */
     @Transactional
+    @Override
     public List<DepartementDto> supprimer(Integer id) {
         if (!departementRepository.existsById(id)) {
             throw new RuntimeException("Département non trouvé");
@@ -123,6 +136,7 @@ public class DepartementService {
      * @throws RuntimeException si le département n'existe pas
      */
     @Transactional
+    @Override
     public DepartementDto modifier(Integer id, DepartementDto dto) {
         Departement existant = departementRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Département non trouvé"));
@@ -142,6 +156,7 @@ public class DepartementService {
      * @return liste des N villes les plus peuplées sous forme de {@link VilleDto}
      */
     @Transactional
+    @Override
     public List<VilleDto> topVilles(Integer idDept, int n) {
         List<Ville> villes = villeRepository.findTopNByDepartement(
                 idDept,
@@ -161,12 +176,14 @@ public class DepartementService {
      * @return liste de {@link VilleDto} correspondant aux critères
      */
     @Transactional
+    @Override
     public List<VilleDto> villesParPopulation(Integer idDept, int min, int max) {
         List<Ville> villes =
                 villeRepository.findByPopulationBetweenAndDepartementIdOrderByPopulationDesc(min, max, idDept);
         return villeMapper.toDtos(villes);
     }
 
+    @Override
     public List<VilleDto> villesParDepartementParPopulation(String code, int min, int max) {
         List<Ville> villes =
                 villeRepository.findByPopulationBetweenAndDepartementCodeOrderByPopulationDesc(min, max, code);

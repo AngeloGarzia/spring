@@ -53,6 +53,11 @@ public class Departement {
     @JsonIgnore
     private List<Ville> villes = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "region_code")  // FK vers Region.code
+    private Region region;
+
+
     @Override
     public String toString() {
         return "Departement{" +
@@ -63,6 +68,14 @@ public class Departement {
                 '}';
     }
     //guetter setter
+
+    public Region getRegion() {
+        return region;
+    }
+
+    public void setRegion(Region region) {
+        this.region = region;
+    }
 
     public Integer getId() {
         return id;

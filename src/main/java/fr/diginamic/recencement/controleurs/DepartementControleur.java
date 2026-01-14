@@ -1,11 +1,20 @@
 package fr.diginamic.recencement.controleurs;
-
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.BaseColor;
+import java.io.ByteArrayOutputStream;
 import fr.diginamic.recencement.Dto.DepartementDto;
 import fr.diginamic.recencement.Dto.VilleDto;
 import fr.diginamic.recencement.mappers.DepartementMapper;
 import fr.diginamic.recencement.services.DepartementService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +59,7 @@ public class DepartementControleur implements IDepartementControleur {
         return ResponseEntity.status(HttpStatus.CREATED)    // 201 Created
                 .body(service.creer(dto));                  // + département créé
     }
+
     // DELETE /departements/{id} → Supprime un département
     @DeleteMapping("/{id}")
     @Override
@@ -67,9 +77,9 @@ public class DepartementControleur implements IDepartementControleur {
             BindingResult result) {                         // Erreurs validation
         if (result.hasErrors())
             return ResponseEntity.badRequest()
-                   .build();                                // 400 erreur
-            return ResponseEntity
-                   .ok(service.modifier(id, dto));          // 200 + département modifié
+                    .build();                                // 400 erreur
+        return ResponseEntity
+                .ok(service.modifier(id, dto));          // 200 + département modifié
     }
 
     // GET /departements → Liste tous les départements
@@ -105,6 +115,7 @@ public class DepartementControleur implements IDepartementControleur {
         }
         return ResponseEntity.ok(villes);
     }
+
     //GET /departements/code}/population/{min}/{max} → Villes par population min/max et par code departement
     @GetMapping("/code/{code}/population/{min}/{max}")
     @Override
@@ -119,4 +130,58 @@ public class DepartementControleur implements IDepartementControleur {
         return ResponseEntity.ok(villes);
     }
 
+    //GET
+    @GetMapping("/{code}/pdf")
+    @Operation(summary = "Export PDF département")
+    public ResponseEntity<byte[]> exportPdfDepartement(@PathVariable String code) {
+        DepartementDto dept = service.getByCode(code);
+        List<VilleDto> villes = service.getVillesByDepartement(code);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document();
+
+        try {
+            PdfWriter writer = PdfWriter.getInstance(document, baos);
+            document.open();
+
+            // Cadre fin autour du document
+            PdfPTable borderTable = new PdfPTable(1);
+            borderTable.setWidthPercentage(80);
+            borderTable.getDefaultCell().setBorder(PdfPCell.BOX);
+            borderTable.getDefaultCell().setBorderWidth(2);
+            borderTable.getDefaultCell().setBackgroundColor(new BaseColor(245, 245, 245));  // Fond très clair
+            borderTable.getDefaultCell().setPadding(15);
+
+            PdfPCell contentCell = new PdfPCell();
+            contentCell.setBorder(PdfPCell.NO_BORDER);
+            contentCell.setBackgroundColor(new BaseColor(245, 245, 245));
+            contentCell.setPadding(15);
+
+            // Contenu dans la cellule
+            Paragraph titre = new Paragraph(dept.getNom(), FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 22));
+            contentCell.addElement(titre);
+            contentCell.addElement(Chunk.NEWLINE);
+
+            contentCell.addElement(new Paragraph("Code du Departement: " + dept.getCode()));
+            //contentCell.addElement(new Paragraph("Nom: " + dept.getNom()));
+            contentCell.addElement(Chunk.NEWLINE);
+
+            contentCell.addElement(new Paragraph("Villes:", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12)));
+            for (VilleDto v : villes) {
+                contentCell.addElement(new Paragraph("  • " + v.getNom() + " - " + v.getPopulation() + " habitants."));
+            }
+
+            borderTable.addCell(contentCell);
+            document.add(borderTable);
+
+            document.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur PDF", e);
+        }
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=" + code + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(baos.toByteArray());
+    }
 }

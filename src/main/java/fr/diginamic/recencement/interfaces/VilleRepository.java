@@ -35,6 +35,8 @@ public interface VilleRepository extends JpaRepository<Ville, Integer> {
     // Recherche villes par préfixe nom INSENSIBLE À LA CASSE (TP10)
     List<Ville> findByNomStartingWithIgnoreCase(String prefixe);
 
+    //  AJOUTE pour TP12 PDF
+    List<Ville> findByDepartementCodeOrderByPopulationDesc(String code);
 
 
 }

@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Service
 @Transactional
-public class VilleService {
+public class VilleService implements IVilleService {
 
     private final VilleRepository villeRepository;
     private final DepartementRepository departementRepository;
@@ -38,11 +38,13 @@ public class VilleService {
     }
 
     @Transactional
+    @Override
     public List<VilleDto> extractVilles() {
         return mapper.toDtos(villeRepository.findAll());
     }
 
     @Transactional
+    @Override
     public VilleDto extractVille(int idVille) {
         Ville ville = villeRepository.findById(idVille)
                 .orElseThrow(() -> new VilleApiException("La ville n'a pas été trouvée"));
@@ -51,11 +53,13 @@ public class VilleService {
 
 
     @Transactional
+    @Override
     public List<VilleDto> extractVillesParNomPrefixe(String prefixe) {
         return mapper.toDtos(villeRepository.findByNomStartingWithIgnoreCase(prefixe));
     }
 
     @Transactional
+    @Override
     public VilleDto extractVille(String nom) {
         List<Ville> resultats = villeRepository.findByNomStartingWith(nom);
         if (resultats.isEmpty()) {
@@ -65,6 +69,7 @@ public class VilleService {
     }
 
     @Transactional
+    @Override
     public VilleDto insertVille(VilleDto villeDto) {
 
         List<String> erreurs = new ArrayList<>();
@@ -108,24 +113,8 @@ public class VilleService {
         return mapper.toDto(savedVille);
     }
 
-    private Departement findOrCreateDepartement(VilleDto dto) {
-        if (dto.getCodeDepartement() != null) {
-            return departementRepository.findByCode(dto.getCodeDepartement())
-                    .orElseGet(() -> {
-                        Departement newDept = new Departement();
-                        newDept.setCode(dto.getCodeDepartement());
-                        newDept.setNom("Département " + dto.getCodeDepartement());
-                        return departementRepository.save(newDept);
-                    });
-        }
-        if (dto.getIdDepartement() != null) {
-            return departementRepository.findById(dto.getIdDepartement())
-                    .orElseThrow(() -> new VilleApiException("Département inconnu"));
-        }
-        throw new VilleApiException("code Departement ou id Departement obligatoire");
-    }
-
     @Transactional
+    @Override
     public VilleDto modifierVille(int idVille, VilleDto villeModifiee) {
 
         List<String> erreurs = new ArrayList<>();
@@ -157,6 +146,7 @@ public class VilleService {
     }
 
     @Transactional
+    @Override
     public List<VilleDto> extractVillesParPopulation(int min, int max) {
         if (min > max) {
             throw new VilleApiException("La borne minimale doit être inférieure ou égale à la borne maximale");
@@ -165,6 +155,7 @@ public class VilleService {
     }
 
     @Transactional
+    @Override
     public List<VilleDto> supprimerVille(int idVille) {
         Ville existante = villeRepository.findById(idVille)
                 .orElseThrow(() -> new VilleApiException("La ville n'a pas été trouvée"));
@@ -172,6 +163,7 @@ public class VilleService {
         return mapper.toDtos(villeRepository.findAll());
     }
     @Transactional
+    @Override
     public List<VilleDto> extractVillesParPopulationEtDepartement(int idDept, int min, int max) {
         if (min > max) {
             throw new VilleApiException("La borne minimale doit être inférieure ou égale à la borne maximale");
@@ -181,6 +173,7 @@ public class VilleService {
         );
     }
     @Transactional
+    @Override
     public List<VilleDto> extractTopNVillesParDepartement(int idDept, int n) {
         if (n <= 0) {
             throw new VilleApiException("Le nombre de villes doit être strictement positif");
@@ -190,10 +183,33 @@ public class VilleService {
         );
     }
     @Transactional
+    @Override
     public Page<VilleDto> extractVillesPage(int page, int size) {
         PageRequest pageable = PageRequest.of(page, size);
         return villeRepository.findAll(pageable)
                 .map(mapper::toDto);
     }
+    /**
+     * Trouve ou crée département (privé)
+     */
+    private Departement findOrCreateDepartement(VilleDto villeDto) {
+        if (villeDto.getCodeDepartement() != null) {
+            return departementRepository.findByCode(villeDto.getCodeDepartement())
+                    .orElseGet(() -> {
+                        Departement newDept = new Departement();
+                        newDept.setCode(villeDto.getCodeDepartement());
+                        newDept.setNom("Département " + villeDto.getCodeDepartement());
+                        return departementRepository.save(newDept);
+                    });
+        }
+        if (villeDto.getIdDepartement() != null) {
+            return departementRepository.findById(villeDto.getIdDepartement())
+                    .orElseThrow(() -> new VilleApiException("Département ID " + villeDto.getIdDepartement() + " inconnu"));
+        }
+        throw new VilleApiException("codeDepartement OU idDepartement requis");
+    }
 
+    public List<VilleDto> extractVillesParPopulationSup(int min) {
+        return mapper.toDtos(villeRepository.findByPopulationGreaterThanOrderByPopulationDesc(min));
+    }
 }
