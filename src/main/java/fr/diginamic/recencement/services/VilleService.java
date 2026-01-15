@@ -8,10 +8,15 @@ import fr.diginamic.recencement.interfaces.DepartementRepository;
 import fr.diginamic.recencement.interfaces.VilleRepository;
 import fr.diginamic.recencement.mappers.VilleMapper;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,6 +27,7 @@ import java.util.List;
  * Plus tard, elle pourra être remplacée par une implémentation basée sur JPA / base de données.
  */
 @Service
+@Slf4j
 @Transactional
 public class VilleService implements IVilleService {
 
@@ -109,7 +115,14 @@ public class VilleService implements IVilleService {
         Ville ville = mapper.toEntity(villeDto);
         ville.setDepartement(deptCible);
 
+        //log
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username =authentication.getName();
+        ville.setUserMaj(username);
+        ville.setDateMaj(LocalDateTime.now());
+
         Ville savedVille = villeRepository.save(ville);
+        log.info("Ville insérée en base - ID: {}, Nom: {}", savedVille.getId(), savedVille.getNom());
         return mapper.toDto(savedVille);
     }
 
@@ -135,6 +148,13 @@ public class VilleService implements IVilleService {
 
         existante.setNom(villeModifiee.getNom());
         existante.setPopulation(villeModifiee.getPopulation());
+        //log
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username =authentication.getName();
+        existante.setUserMaj(username);
+        existante.setDateMaj(LocalDateTime.now());
+        log.info("Ville modifiée - ID: {}, Nouveau nom: {}, Population: {}",
+                existante.getId(), existante.getNom(), existante.getPopulation());
 
         //  Gère département si changé
         if (villeModifiee.getCodeDepartement() != null || villeModifiee.getIdDepartement() != null) {
@@ -142,6 +162,8 @@ public class VilleService implements IVilleService {
         }
 
         Ville savedVille = villeRepository.save(existante);
+
+
         return mapper.toDto(savedVille);
     }
 
@@ -159,6 +181,7 @@ public class VilleService implements IVilleService {
     public List<VilleDto> supprimerVille(int idVille) {
         Ville existante = villeRepository.findById(idVille)
                 .orElseThrow(() -> new VilleApiException("La ville n'a pas été trouvée"));
+
         villeRepository.deleteById(idVille);
         return mapper.toDtos(villeRepository.findAll());
     }

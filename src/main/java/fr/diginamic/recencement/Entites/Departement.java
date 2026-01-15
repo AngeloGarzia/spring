@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +58,11 @@ public class Departement {
     @JoinColumn(name = "region_code")  // FK vers Region.code
     private Region region;
 
+    @Column(name = "user_maj", length = 50)
+    private String userMaj;
+
+    @Column(name = "date_maj")
+    private LocalDateTime dateMaj;
 
     @Override
     public String toString() {
@@ -68,6 +74,22 @@ public class Departement {
                 '}';
     }
     //guetter setter
+
+    public String getUserMaj() {
+        return userMaj;
+    }
+
+    public void setUserMaj(String userMaj) {
+        this.userMaj = userMaj;
+    }
+
+    public LocalDateTime getDateMaj() {
+        return dateMaj;
+    }
+
+    public void setDateMaj(LocalDateTime dateMaj) {
+        this.dateMaj = dateMaj;
+    }
 
     public Region getRegion() {
         return region;

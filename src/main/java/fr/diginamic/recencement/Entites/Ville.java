@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+
 /**
  * Entité Ville avec relation ManyToOne vers Departement.
  */
@@ -31,6 +33,12 @@ public class Ville {
     @JoinColumn(name = "id_dept", nullable = false)
     private Departement departement;
 
+    @Column(name = "user_maj", length = 50)
+    private String userMaj;
+
+    @Column(name = "date_maj")
+    private LocalDateTime dateMaj;
+
     public Ville() {
     }
 
@@ -52,6 +60,26 @@ public class Ville {
     }
 
     // getters / setters
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUserMaj() {
+        return userMaj;
+    }
+
+    public void setUserMaj(String userMaj) {
+        this.userMaj = userMaj;
+    }
+
+    public LocalDateTime getDateMaj() {
+        return dateMaj;
+    }
+
+    public void setDateMaj(LocalDateTime dateMaj) {
+        this.dateMaj = dateMaj;
+    }
 
     public Integer getId() {
         return id;

@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +49,7 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     // POST /departements → Crée un département
+    @Secured("ROLE_ADMIN")
     @PostMapping
     @Override
     public ResponseEntity<DepartementDto> creerDepartement(
@@ -61,6 +63,7 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     // DELETE /departements/{id} → Supprime un département
+    @Secured("ROLE_ADMIN")
     @DeleteMapping("/{id}")
     @Override
     public ResponseEntity<List<DepartementDto>> supprimerDepartement(
@@ -69,6 +72,7 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     // PUT /departements/{id} → Met à jour un département
+    @Secured("ROLE_ADMIN")
     @PutMapping("/{id}")
     @Override
     public ResponseEntity<DepartementDto> modifierDepartement(
@@ -83,6 +87,7 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     // GET /departements → Liste tous les départements
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping
     @Override
     public ResponseEntity<List<DepartementDto>> getDepartements() {
@@ -90,7 +95,8 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     // GET /departements/{id}/top-villes/{n} → Top N villes d'un département
-    @GetMapping("/{id}/top-villes/{n}")
+
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})    @GetMapping("/{id}/top-villes/{n}")
     @Override
     public ResponseEntity<List<VilleDto>> topVilles(
             @PathVariable Integer id,                       // ID département
@@ -103,6 +109,7 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     //GET /departements/{id}/population/{min}/{max} → Villes par population min/max et par id departement
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping("/{id}/population/{min}/{max}")
     @Override
     public ResponseEntity<List<VilleDto>> villesParPopulation(
@@ -117,6 +124,7 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     //GET /departements/code}/population/{min}/{max} → Villes par population min/max et par code departement
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping("/code/{code}/population/{min}/{max}")
     @Override
     public ResponseEntity<List<VilleDto>> villesParDepartementParPopulation(
@@ -131,6 +139,7 @@ public class DepartementControleur implements IDepartementControleur {
     }
 
     //GET
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping("/{code}/pdf")
     @Operation(summary = "Export PDF département")
     public ResponseEntity<byte[]> exportPdfDepartement(@PathVariable String code) {

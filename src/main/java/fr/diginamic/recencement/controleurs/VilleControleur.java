@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,6 +36,7 @@ public class VilleControleur implements IVilleControleur {
      * GET permettant de récupérer la liste de toutes les villes (paginée).
      * URL : GET /villes?page=0&size=20
      */
+    //@Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping
     @Override
     public ResponseEntity<?> getVilles(
@@ -47,6 +49,7 @@ public class VilleControleur implements IVilleControleur {
      * POST : insère une nouvelle ville et retourne la ville créée.
      * URL : POST /villes
      */
+    @Secured({"ROLE_ADMIN"})
     @PostMapping
     @Override
     public ResponseEntity<VilleDto> ajouterVille(@Valid @RequestBody VilleDto nouvelleVille,
@@ -62,6 +65,7 @@ public class VilleControleur implements IVilleControleur {
      * GET : retourne une ville en fonction de son id.
      * URL : GET /villes/{id}
      */
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping("/{id}")
     @Override
     public ResponseEntity<VilleDto> getVilleById(@PathVariable int id) {
@@ -71,6 +75,7 @@ public class VilleControleur implements IVilleControleur {
     /**
      * GET : villes commençant par {nom}
      */
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping("/nom/{prefixe}")
     @Override
     public ResponseEntity<?> getVillesParNomPrefixe(@PathVariable String prefixe) {
@@ -86,6 +91,7 @@ public class VilleControleur implements IVilleControleur {
      * GET : retourne les villes avec population entre min et max.
      * URL : GET /villes/population/{min}/{max}
      */
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping("/population/{min}/{max}")
     @Override
     public ResponseEntity<?> getVillesParPopulation(
@@ -107,6 +113,7 @@ public class VilleControleur implements IVilleControleur {
      * PUT : modifie une ville et retourne la ville modifiée.
      * URL : PUT /villes/{id}
      */
+    @Secured("ROLE_ADMIN")
     @PutMapping("/{id}")
     @Override
     public ResponseEntity<VilleDto> modifierVille(
@@ -124,6 +131,7 @@ public class VilleControleur implements IVilleControleur {
      * DELETE : supprime une ville et retourne la liste après suppression.
      * URL : DELETE /villes/{id}
      */
+    @Secured("ROLE_ADMIN")
     @DeleteMapping("/{id}")
     @Override
     public ResponseEntity<List<VilleDto>> supprimerVille(
@@ -134,6 +142,7 @@ public class VilleControleur implements IVilleControleur {
      * Trouve les villes de plus de N habitants et creer un csv
      * URL :GET /csv/{min}
      */
+    @Secured({"ROLE_USER", "ROLE_ADMIN"})
     @GetMapping("/csv/{min}")
     @Operation(summary = "Export CSV villes > population min")
     public ResponseEntity<byte[]> exportCsvVilles(@PathVariable int min) {

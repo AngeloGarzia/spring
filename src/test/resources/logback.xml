@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Appender fichier texte personnalisé -->
+    <appender name="VILLE_LOG" class="ch.qos.logback.core.FileAppender">
+        <file>src/main/resources/logs/ville-operations.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Logger spécifique VilleService vers fichier -->
+    <logger name="fr.diginamic.recencement.services.VilleService" level="INFO" additivity="false">
+        <appender-ref ref="VILLE_LOG"/>
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Logs SQL Hibernate -->
+    <logger name="org.hibernate.SQL" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>
